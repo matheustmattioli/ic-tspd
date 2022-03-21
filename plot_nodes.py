@@ -1,5 +1,5 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
+# Script para plotar o grafo formado pelos nossos resultados
+
 import networkx as nx
 import matplotlib.pyplot as plt
 from networkx.drawing.nx_pydot import write_dot
@@ -20,22 +20,35 @@ def read_instance(input_data, file_location):
     # Lê as linhas da nossa entrada
     lines = input_data.split('\n')
 
-    # Coleta informação da primeira linha
-    node_count = int(lines[0])      # Qtd vértices
+    numerical_input = []
+    # Ignorar os comentários
+    for line in lines:
+        if not line.strip().startswith('/'):
+            numerical_input.append(line)
+
+    # Coleta a velocidade do caminhão e drone
+    speed_truck = float(numerical_input[0])
+    speed_drone = float(numerical_input[1])
+    # Coleta a quantidade de vértices
+    node_count = int(float(numerical_input[2]))
 
     # Para o restante das linhas
     # Adiciona informações dos vértices nas triplas
     nodes = []
-    for i in range(1, node_count + 1):
-        line = lines[i]
+    for i in range(3, node_count + 3):
+        line = numerical_input[i]
         parts = line.split()
+        # Pré-processamento para se adequar aos nosso algoritmos
+        if parts[2] == "depot":
+            parts[2] = 0
+        else:
+            parts[2] = parts[2].replace("v", "")
         nodes.append(
             Node(float(parts[0]), float(parts[1]), int(parts[2])))
 
-    dictofpositions = {i : (nodes[i].x, nodes[i].y) for i in range(0, node_count)}      # Armazena as coordenadas
-                                                                                                    # do vértice i
+    # Armazena as coordenadas do vértice i
+    dictofpositions = {i : (nodes[i].x, nodes[i].y) for i in range(0, node_count)}      
 
-    
     # Por fim, podemos mandar imprimir a solução
     read_sol(node_count, nodes, dictofpositions, file_location)
 
@@ -46,7 +59,8 @@ def read_sol(node_count, nodes, dictofpositions, file_location):
     # do tour construído para TSP
     # TODO: Adaptar para TSP-D
     file_location = file_location.replace("instances", "solutions") 
-    instance_sol_file = open(file_location + ".sol", "r")
+    file_location = file_location.split(".txt")
+    instance_sol_file = open(file_location[0] + ".sol", "r")
     
     # TODO: Ainda é necessário adaptar a separação em 
     # uma lista de clientes atendidos por drone e 
@@ -61,13 +75,11 @@ def read_sol(node_count, nodes, dictofpositions, file_location):
     first_line = lines[0].split()
     sol_value = float(first_line[0])
 
-
     # Pegamos a rota do caminhão.
     # TODO: Pegar as rotas dos drones.
     line = lines[1].split()     # Segunda linha armazena a rota do caminhão
     truck_route = list(map(int, line))
     
-
     # Desenha o TSP formado.
     graph_solution = nx.Graph()
     for i in range(0, node_count):
@@ -91,7 +103,8 @@ if __name__ == '__main__':
         read_instance(input_data, file_location)
     else:
         print('This test requires an input file.  Please select one from the data directory.' \
-             '(i.e. python print_nodes.py ./data/instances/tspd_5_1)')
+             '(i.e. python print_nodes.py ./data/instances/singlecenter/singlecenter-1-n5.txt)')
     file_location = file_location.replace("instances", "images")
-    plt.savefig(file_location)
+    file_location = file_location.split(".txt")
+    plt.savefig(file_location[0])
     plt.show()
