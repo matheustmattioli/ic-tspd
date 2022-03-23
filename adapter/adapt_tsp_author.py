@@ -1,26 +1,22 @@
-import sys      # Necessário para ler info do terminal
-import os       # Para ler todas as instâncias de uma pasta
-import math     # Para cálculo de distâncias no plano euclidiano
-import libs.GRASP as GRASP
-from libs.greedyRCL import greedypath_RCL
-from libs.localSearch import localSearch2OPT # Vamos utilizar Metaheurística GRASP-VND para resolver TSP
-from progress.bar import Bar # Para verificar o avanço da nossa resposta
+from itertools import count
+import sys
 from collections import namedtuple
+from progress.bar import Bar
+import os
+import math
 
-from libs.utilities import calc_obj      # Para armazenar várias informações em um vértice
-
-# tripla indicando o índice e coordenadas xy do cliente 
-# cada vértice é representado por index
 Node = namedtuple("Node", ['x', 'y', 'index'])
-
-DEBUG = 0       # Variável global para debug do código.
-
 
 
 def length(node1, node2):
     # Função que calcula distância euclidiana entre dois vértices do plano.
     return math.sqrt((node1.x - node2.x)**2 + (node1.y - node2.y)**2)
 
+def calc_obj(tour, nodes):
+    cost_obj = 0
+    for i in range(len(tour)):
+        cost_obj += length(nodes[tour[i - 1]], nodes[tour[i]])
+    return cost_obj
 
 def pass_comments(lines):
     # Função para ignorar comentários
@@ -31,14 +27,19 @@ def pass_comments(lines):
         if not line.strip().startswith('/'):
             num_input.append(line)
     return num_input
-    
-def create_nodes(node_count, num_input):
+
+def create_nodes(node_count, file_location):
     # Função para ler informações da entrada 
     # e criar nossas triplas que representam nós
     # no grafo.
+    file_location = file_location.replace("author_solutions", "")
+    file_location = file_location.replace("-tsp", "")
+    with open(file_location, 'r') as input_data_file:
+            input_data = input_data_file.read()
+    lines = pass_comments(input_data)
     nodes = []
     for i in range(3, node_count + 3):
-        line = num_input[i]
+        line = lines[i]
         parts = line.split()
         # Pré-processamento para se adequar aos nosso algoritmos
         if parts[2] == "depot":
@@ -53,60 +54,37 @@ def create_nodes(node_count, num_input):
             Node(float(parts[0]), float(parts[1]), int(parts[2])))
     return nodes
 
+def verify_sol(input_data, file_location):
+    # Função para coletar soluçao do autor.
 
-def read_data(input_data):
-    # Função para coletar informações da entrada.
     # Tratamento da entrada.
-    numerical_input = pass_comments(input_data)
-
-    # Coleta a velocidade do caminhão e drone.
-    speed_truck = float(numerical_input[0])
-    speed_drone = float(numerical_input[1])
-
-    # Coleta a quantidade de vértices.
-    node_count = int(float(numerical_input[2]))
+    sol_auth = pass_comments(input_data)
+    # Primeira posiçao do arquivo armazena qtd de vértices.
+    node_count = int(float(sol_auth[0]))
     
-    # Para o restante das linhas
-    # Adiciona informações dos vértices nas triplas.
-    nodes = create_nodes(node_count, numerical_input)
+    # Coleta as informaçoes correspendentes à essa instância.
+    nodes = create_nodes(node_count, file_location)
 
-    if DEBUG >= 1:
-        print(f"Velocidade do caminhão = {speed_truck}")
-        print(f"Velocidade do drone = {speed_drone}")
-        print(f"Número de vértices = {node_count}")
-        
-    if DEBUG >= 2:
-        print("Lista de clientes:")
-        for node in nodes:
-            print(
-                f"index do cliente = {node.index}, ({node.x}, {node.y})")
-        print()
+    # Construir o tour da solução do autor
+    tour = []
+    for i in range(1, node_count + 1):
+        line = sol_auth[i]
+        parts = line.split()
+        tour.append(int(parts[0]))
 
-    return solve_tspd(node_count, nodes)
+    return calc_sol(node_count, nodes, tour)
 
-
-def solve_tspd(node_count, nodes):
-    # TODO: Nessa função vamos resolver o problema do TSP-D,
-    # por enquanto vamos testar o resultado do GRASP-VND do TSP nessas instâncias.
-
-    node_indexes = []
-    for node in nodes:
-        node_indexes.append(node.index) 
-    # Teste com algoritmo guloso aleatorizado
-    # solution = greedypath_RCL(node_indexes, nodes, 0.25)
-    # Teste com GRASP
-    solution = GRASP.grasp_2opt(node_indexes, nodes)
-    # GRASP VND é muito lento para algumas instâncias deste conjunto, então não testei ainda
+def calc_sol(node_count, nodes, tour):
+    # Nessa função é calculado o custo da solução
+    # obtida pelo autor do dataset
     
-    # Calcula custo do TSP
-    # TODO: Alterar para TSP-D
-    cost_obj = calc_obj(solution, nodes)
+    cost_obj = calc_obj(tour, nodes)
     
-    # Formata a solução obtida para escrevermos em um arquivo
     output_data = '%.2f' % cost_obj + '\n'
-    output_data += " ".join([str(solution[i]) for i in range(node_count)]) + '\n'
+    output_data += " ".join([str(tour[i]) for i in range(node_count)]) + '\n'
 
     return output_data
+
 
 if __name__ == '__main__':
     # Função "main" seleciona o input na linha de comando
@@ -124,72 +102,72 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         if sys.argv[1].strip() == "1":
             count = 0
-            path = ".\\data\\instances\\doublecenter"
+            path = ".\\data\\instances\\doublecenter\\author_solutions"
             file_location = []
             for file in os.listdir(path):
-                if file.endswith(".txt"):
+                if file.endswith(".txt") and file.find("sMIP") == -1:
                     count += 1
                     file_location.append(f"{path}\{file}".strip())
         elif sys.argv[1].strip() == "2":
             count = 0
-            path = ".\\data\\instances\\singlecenter"
+            path = ".\\data\\instances\\singlecenter\\author_solutions"
             file_location = []
             for file in os.listdir(path):
-                if file.endswith(".txt"):
+                if file.endswith(".txt") and file.find("sMIP") == -1:
                     count += 1
                     file_location.append(f"{path}\{file}".strip())
         elif sys.argv[1].strip() == "3":
             count = 0
-            path = ".\\data\\instances\\uniform"
+            path = ".\\data\\instances\\uniform\\author_solutions"
             file_location = []
             for file in os.listdir(path):
-                if file.endswith(".txt"):
+                if file.endswith(".txt") and file.find("sMIP") == -1:
                     count += 1
                     file_location.append(f"{path}\{file}".strip())
         elif sys.argv[1].strip() == "4": # Faça todos os passos anteriores
             count = 0
-            path = ".\\data\\instances\\doublecenter"
+            path = ".\\data\\instances\\doublecenter\\author_solutions"
             file_location = []
             for file in os.listdir(path):
-                if file.endswith(".txt"):
+                if file.endswith(".txt") and file.find("sMIP") == -1:
                     count += 1
                     file_location.append(f"{path}\{file}".strip())
             
-            path = ".\\data\\instances\\singlecenter"
+            path = ".\\data\\instances\\singlecenter\\author_solutions"
             for file in os.listdir(path):
-                if file.endswith(".txt"):
+                if file.endswith(".txt") and file.find("sMIP") == -1:
                     count += 1
                     file_location.append(f"{path}\{file}".strip())
             
-            path = ".\\data\\instances\\uniform"
+            path = ".\\data\\instances\\uniform\\author_solutions"
             for file in os.listdir(path):
-                if file.endswith(".txt"):
+                if file.endswith(".txt") and file.find("sMIP") == -1:
                     count += 1
                     file_location.append(f"{path}\{file}".strip())
         else:
             file_location = sys.argv[1].strip()
             with open(file_location, 'r') as input_data_file:
                 input_data = input_data_file.read()
-            output_data = read_data(input_data)
-            print(output_data)
+            output_data = verify_sol(input_data, file_location)
             file_location = file_location.replace("instances", "solutions") 
+            file_location = file_location.replace("author_solutions", "")
             file_location = file_location.split(".txt")
-            solution_file = open(file_location[0] + ".sol", "w")
+            solution_file = open(file_location[0] + "-author-value" + ".sol", "w")
             solution_file.write(output_data)
             solution_file.close()
             sys.exit()
-        # print(file_location)
         with Bar('Processing...', max=count) as bar:
             for file in file_location:
                 with open(file, 'r') as input_data_file:
                     input_data = input_data_file.read()
-                output_data = read_data(input_data)
-                file = file.replace("instances", "solutions")
+                output_data = verify_sol(input_data, file)
+                file = file.replace("instances", "solutions") 
+                file = file.replace("author_solutions", "")
                 file = file.split(".txt")
-                solution_file = open(file[0] + ".sol", "w")
+                solution_file = open(file[0] + "-author-value" + ".sol", "w")
                 solution_file.write(output_data)
                 solution_file.close()
                 bar.next()
     else:
         print('This test requires an input file.  Please select one from the data directory. \
-             (i.e. python tspd.py ./data/instances/singlecenter/singlecenter-1-n5.txt)')
+             (i.e. python solver.py ./data/instances/singlecenter/author_solutions/singlecenter-1-n5-tsp.txt)')
