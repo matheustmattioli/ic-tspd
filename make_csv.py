@@ -58,7 +58,7 @@ for file in os.listdir(path):
 
 # para coletar o valor do autor e o nosso ao mesmo tempo,
 # vamos enviar para a função make_data_csv os dois input_data ao mesmo tempo
-row_list = [["File Name", "Author Value", "Our Value", "TSPD Value"]]
+row_list = [["Nome Instancia", "Solucao otima TSP", "Solucao GRASP TSP", "Solucao TSPD"]]
 input_data = []
 count_input = 0
 with Bar('Processing...', max=1388) as bar:

@@ -1,0 +1,5 @@
+Soluções apresentadas pelo GRASP-VND para tsp e tsp-d.
+São apresentadas na forma:
+- Custo solução.
+- Entregas do caminhão
+- Entregas do drone

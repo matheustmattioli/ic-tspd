@@ -134,13 +134,10 @@ def verify_sol(input_data, file_location):
 def calc_sol(count_operation, nodes, operations, speed_truck, speed_drone):
     # Nessa função é calculado o custo da solução
     # obtida pelo autor do dataset
-    cost_obj = int(calc_obj(operations, speed_truck, speed_drone, nodes))
-    
-    # convertendo o tempo para horas:
-    cost_obj = str(datetime.timedelta(seconds=cost_obj))
-    
+    cost_obj = float(calc_obj(operations, speed_truck, speed_drone, nodes))
+        
     # tempo do tour no output data
-    output_data = cost_obj + '\n'
+    output_data = '%.2f' % cost_obj + '\n'
 
     # TODO: formar os circuitos do caminhão e drone
     # output_data += " ".join([str(tour[i]) for i in range(node_count)]) + '\n'

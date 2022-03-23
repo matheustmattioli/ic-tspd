@@ -1,0 +1,10 @@
+Os dados estão disponibilizados na ordem:
+
+- **Number of Nodes**
+- **Depot Location**
+- **Customer Locations**
+
+
+Foram retiradas do repósitório https://github.com/pcbouman-eur/TSP-D-Instances/tree/1.1
+A licença pede que citamos as instâncias em um futuro relatório através da citação desse artigo
+https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2639672

@@ -1,0 +1,2 @@
+As imagens nos apresentam o grafo formado por nossas soluções
+para as instâncias abordadas.
