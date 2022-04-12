@@ -1,11 +1,12 @@
 from itertools import count
+from platform import node
 import sys
 from collections import namedtuple
 from time import time
 from progress.bar import Bar
 import os
 import math
-import datetime
+# import datetime
 
 Node = namedtuple("Node", ['x', 'y', 'index'])
 
@@ -24,29 +25,33 @@ def calc_time_edge(node1, node2, speed_truck, speed_drone, flag_edge):
         return None
     return time
 
-def calc_time_drone_nodes(drone_nodes, speed_drone, nodes):
+def calc_cost_drone_nodes(drone_nodes, speed_drone, nodes):
     # vamos calcular o tempo consumido pela rota do drone
     time = 0
     for i in range(len(drone_nodes)):
         time += calc_time_edge(nodes[drone_nodes[i - 1]], nodes[drone_nodes[i]], 0, speed_drone, "drone")
-    return time
+        # time += length(nodes[drone_nodes[i - 1]], nodes[drone_nodes[i]])
+    len_tour = time*speed_drone
+    return len_tour
 
-def calc_time_truck_nodes(truck_nodes, speed_truck, nodes):
+def calc_cost_truck_nodes(truck_nodes, speed_truck, nodes):
     # vamos calcular o tempo consumido pela rota do caminhão
     time = 0
     for i in range(len(truck_nodes)):
         time += calc_time_edge(nodes[truck_nodes[i - 1]], nodes[truck_nodes[i]], speed_truck, 0, "truck")
-    return time
+        # time += length(nodes[truck_nodes[i - 1]], nodes[truck_nodes[i]])
+    len_tour = time*speed_truck
+    return len_tour
 
-def calc_time_operation(truck_nodes, drone_nodes, speed_truck, speed_drone, nodes):
+def calc_cost_operation(truck_nodes, drone_nodes, speed_truck, speed_drone, nodes):
     # vamos calcular o tempo consumido por cada operação
     if len(drone_nodes) > 0:
-        time_truck_route = calc_time_truck_nodes(truck_nodes, speed_truck, nodes)
-        time_drone_route = calc_time_drone_nodes(drone_nodes, speed_drone, nodes)
-        time = max(time_truck_route, time_drone_route)
+        cost_truck_route = calc_cost_truck_nodes(truck_nodes, speed_truck, nodes)
+        cost_drone_route = calc_cost_drone_nodes(drone_nodes, speed_drone, nodes)
+        cost = max(cost_truck_route, cost_drone_route)
     else:
-        time = calc_time_truck_nodes(truck_nodes, speed_truck, nodes)
-    return time
+        cost = calc_cost_truck_nodes(truck_nodes, speed_truck, nodes)
+    return cost
 
 def calc_obj(operations, speed_truck, speed_drone, nodes):
     # vamos calcular a função objetivo do problema
@@ -54,7 +59,7 @@ def calc_obj(operations, speed_truck, speed_drone, nodes):
     for i in range(len(operations)):
         truck_nodes = operations[i][0]
         drone_nodes = operations[i][1]
-        cost_obj += calc_time_operation(truck_nodes, drone_nodes, speed_truck, speed_drone, nodes)
+        cost_obj += calc_cost_operation(truck_nodes, drone_nodes, speed_truck, speed_drone, nodes)
     return cost_obj
 
 def pass_comments(lines):
@@ -101,10 +106,14 @@ def verify_sol(input_data, file_location):
     # Tratamento da entrada.
     sol_auth = pass_comments(input_data)
     # Primeira posiçao do arquivo armazena qtd de vértices.
-    count_operation = int(float(sol_auth[0]))
-    
+    count_operation = int(sol_auth[0])
+    # print("count_operation =", count_operation)
     # Coleta as informaçoes correspendentes à essa instância.
     nodes, speed_truck, speed_drone = create_nodes(count_operation, file_location)
+    # print("speed_truck =", speed_truck)
+    # print("speed_drone =", speed_drone)
+    # for i in range(count_operation):
+    #     print(nodes[i].index)
 
     # Construir o tour da solução do autor
     operations = []
@@ -115,8 +124,8 @@ def verify_sol(input_data, file_location):
         start = int(parts[0])
         end = int(parts[1])
         drone_node = int(parts[2])
-        if drone_node == -1:
-            continue
+        # if drone_node == -1:
+        #     continue
         internal_nodes = int(parts[3])
         truck_nodes = [start]
         for j in range(4, internal_nodes + 4):
@@ -135,6 +144,29 @@ def calc_sol(count_operation, nodes, operations, speed_truck, speed_drone):
     # Nessa função é calculado o custo da solução
     # obtida pelo autor do dataset
     cost_obj = float(calc_obj(operations, speed_truck, speed_drone, nodes))
+    
+    # # Construir Truck Tour e Drone Tour a partir de operations
+    # truck_tour = [] # Podemos ter mais de um circuito por caminhão
+    # drone_tour = [] # Os triangulos formados pelo drone
+    # tour_aux = []   # Vetor auxiliar para construçao da truck_tour
+
+
+    # for op in operations:
+    #     # Tours do drone
+    #     drone_tour.append(op[1])
+    #     # Tours do caminhao
+    #     tour_residuo = tour_aux # Armazena o circuito em construção pelas iterações
+    #     tour_aux = op[0]
+    #     first_node = tour_aux[0]
+    #     # Se o primeiro nó for igual ao último, o tour está completo.
+    #     # E se o tamanho for 2 significa que o caminhao ficou estacionado, portanto não fecha um circuito.
+    #     if first_node == tour_aux[len(tour_aux) - 1] and len(tour_aux) > 2: 
+    #         truck_tour.append(tour_aux)
+    #         tour_residuo = []
+    #     else:
+    #         for i in range(len(tour_residuo)):
+    #             tour_aux.append(tour_residuo[i])
+
         
     # tempo do tour no output data
     output_data = '%.2f' % cost_obj + '\n'
@@ -146,75 +178,25 @@ def calc_sol(count_operation, nodes, operations, speed_truck, speed_drone):
 
 
 if __name__ == '__main__':
-    # Função "main" seleciona o input na linha de comando
-    # decide se roda todas as instâncias ou apenas uma específica
-    # Formatos:
-    # python tspd.py "info"
-    # info pode ser:
-    # Caminho da instância a ser executada.
-    # 1 - Roda apenas DoubleCenter
-    # 2 - Roda apenas SingleCenter
-    # 3 - Roda apenas Uniform
-    # 4 - Roda todas
+    # Função "main" seleciona o input na linha de comando.
+    # Espera arquivos do tipo .txt e da pasta instâncias/x/author_solutions.
+    # Roda todas as instâncias de um diretório ou um arquivo específico.
+    # Formato:
+    # python tspd.py "caminho diretorio/arquivo"
     # após resolução do problema
     # escreve em arquivo a solução obtida. 
     if len(sys.argv) > 1:
-        if sys.argv[1].strip() == "1":
-            count = 0
-            path = ".\\data\\instances\\doublecenter\\author_solutions"
-            file_location = []
-            for file in os.listdir(path):
-                if file.endswith(".txt") and file.find("tsp") == -1:
-                    count += 1
-                    file_location.append(f"{path}\{file}".strip())
-        elif sys.argv[1].strip() == "2":
-            count = 0
-            path = ".\\data\\instances\\singlecenter\\author_solutions"
-            file_location = []
-            for file in os.listdir(path):
-                if file.endswith(".txt") and file.find("tsp") == -1:
-                    count += 1
-                    file_location.append(f"{path}\{file}".strip())
-        elif sys.argv[1].strip() == "3":
-            count = 0
-            path = ".\\data\\instances\\uniform\\author_solutions"
-            file_location = []
-            for file in os.listdir(path):
-                if file.endswith(".txt") and file.find("tsp") == -1:
-                    count += 1
-                    file_location.append(f"{path}\{file}".strip())
-        elif sys.argv[1].strip() == "4": # Faça todos os passos anteriores
-            count = 0
-            path = ".\\data\\instances\\doublecenter\\author_solutions"
-            file_location = []
-            for file in os.listdir(path):
-                if file.endswith(".txt") and file.find("tsp") == -1:
-                    count += 1
-                    file_location.append(f"{path}\{file}".strip())
-            
-            path = ".\\data\\instances\\singlecenter\\author_solutions"
-            for file in os.listdir(path):
-                if file.endswith(".txt") and file.find("tsp") == -1:
-                    count += 1
-                    file_location.append(f"{path}\{file}".strip())
-            
-            path = ".\\data\\instances\\uniform\\author_solutions"
-            for file in os.listdir(path):
-                if file.endswith(".txt") and file.find("tsp") == -1:
-                    count += 1
-                    file_location.append(f"{path}\{file}".strip())
+        count = 0
+        path = sys.argv[1].strip()
+        file_location = []
+        if path.endswith(".txt"):
+            count += 1
+            file_location.append(f"{path}".strip())
         else:
-            file_location = sys.argv[1].strip()
-            with open(file_location, 'r') as input_data_file:
-                input_data = input_data_file.read()
-            output_data = verify_sol(input_data, file_location)
-            file_location = file_location.replace("instances", "solutions") 
-            file_location = file_location.replace("author_solutions", "")
-            file_location = file_location.split(".txt")
-            solution_file = open(file_location[0] + "-author-value" + ".sol", "w")
-            solution_file.write(output_data)
-            solution_file.close()
-            sys.exit()
+            for file in os.listdir(path):
+                if file.endswith(".txt") and file.find("tsp") == -1:
+                    count += 1
+                    file_location.append(f"{path}\{file}".strip())
         with Bar('Processing...', max=count) as bar:
             for file in file_location:
                 with open(file, 'r') as input_data_file:

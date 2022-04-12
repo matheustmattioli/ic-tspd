@@ -87,75 +87,25 @@ def calc_sol(node_count, nodes, tour):
 
 
 if __name__ == '__main__':
-    # Função "main" seleciona o input na linha de comando
-    # decide se roda todas as instâncias ou apenas uma específica
-    # Formatos:
-    # python tspd.py "info"
-    # info pode ser:
-    # Caminho da instância a ser executada.
-    # 1 - Roda apenas DoubleCenter
-    # 2 - Roda apenas SingleCenter
-    # 3 - Roda apenas Uniform
-    # 4 - Roda todas
+    # Função "main" seleciona o input na linha de comando.
+    # Espera arquivos do tipo .txt e da pasta instâncias/x/author_solutions.
+    # Roda todas as instâncias de um diretório ou um arquivo específico.
+    # Formato:
+    # python tspd.py "caminho diretorio/arquivo"
     # após resolução do problema
     # escreve em arquivo a solução obtida. 
     if len(sys.argv) > 1:
-        if sys.argv[1].strip() == "1":
-            count = 0
-            path = ".\\data\\instances\\doublecenter\\author_solutions"
-            file_location = []
-            for file in os.listdir(path):
-                if file.endswith(".txt") and file.find("sMIP") == -1:
-                    count += 1
-                    file_location.append(f"{path}\{file}".strip())
-        elif sys.argv[1].strip() == "2":
-            count = 0
-            path = ".\\data\\instances\\singlecenter\\author_solutions"
-            file_location = []
-            for file in os.listdir(path):
-                if file.endswith(".txt") and file.find("sMIP") == -1:
-                    count += 1
-                    file_location.append(f"{path}\{file}".strip())
-        elif sys.argv[1].strip() == "3":
-            count = 0
-            path = ".\\data\\instances\\uniform\\author_solutions"
-            file_location = []
-            for file in os.listdir(path):
-                if file.endswith(".txt") and file.find("sMIP") == -1:
-                    count += 1
-                    file_location.append(f"{path}\{file}".strip())
-        elif sys.argv[1].strip() == "4": # Faça todos os passos anteriores
-            count = 0
-            path = ".\\data\\instances\\doublecenter\\author_solutions"
-            file_location = []
-            for file in os.listdir(path):
-                if file.endswith(".txt") and file.find("sMIP") == -1:
-                    count += 1
-                    file_location.append(f"{path}\{file}".strip())
-            
-            path = ".\\data\\instances\\singlecenter\\author_solutions"
-            for file in os.listdir(path):
-                if file.endswith(".txt") and file.find("sMIP") == -1:
-                    count += 1
-                    file_location.append(f"{path}\{file}".strip())
-            
-            path = ".\\data\\instances\\uniform\\author_solutions"
-            for file in os.listdir(path):
-                if file.endswith(".txt") and file.find("sMIP") == -1:
-                    count += 1
-                    file_location.append(f"{path}\{file}".strip())
+        count = 0
+        path = sys.argv[1].strip()
+        file_location = []
+        if path.endswith(".txt"):
+            count += 1
+            file_location.append(f"{path}".strip())
         else:
-            file_location = sys.argv[1].strip()
-            with open(file_location, 'r') as input_data_file:
-                input_data = input_data_file.read()
-            output_data = verify_sol(input_data, file_location)
-            file_location = file_location.replace("instances", "solutions") 
-            file_location = file_location.replace("author_solutions", "")
-            file_location = file_location.split(".txt")
-            solution_file = open(file_location[0] + "-author-value" + ".sol", "w")
-            solution_file.write(output_data)
-            solution_file.close()
-            sys.exit()
+            for file in os.listdir(path):
+                if file.endswith(".txt") and file.find("sMIP") == -1:
+                    count += 1
+                    file_location.append(f"{path}\{file}".strip())
         with Bar('Processing...', max=count) as bar:
             for file in file_location:
                 with open(file, 'r') as input_data_file:

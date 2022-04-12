@@ -83,7 +83,7 @@ def plot_sol(node_count, nodes, dictofpositions, file_location):
 
     # Pegamos a rota do caminhão.
     # TODO: Pegar as rotas dos drones.
-    line = lines[1].split()     # Segunda linha armazena a rota do caminhão
+    line = lines[2].split()     # Terceira linha armazena a rota do caminhão
     truck_route = list(map(int, line))
     
     # Desenha o TSP formado.
@@ -100,85 +100,27 @@ def plot_sol(node_count, nodes, dictofpositions, file_location):
         print("Number of nodes: ", graph_solution.number_of_nodes())
 
 # Função "main" seleciona o input na linha de comando
+# Espera arquivos do tipo .sol
 if __name__ == '__main__':
     import sys
     # Função "main" seleciona o input na linha de comando
-    # decide se roda todas as instâncias ou apenas uma específica
-    # Formatos:
-    # python tspd.py "info"
-    # info pode ser:
-    # Caminho da instância a ser executada.
-    # 1 - Roda apenas DoubleCenter
-    # 2 - Roda apenas SingleCenter
-    # 3 - Roda apenas Uniform
-    # 4 - Roda todas
+    # roda todas as instâncias de um diretório ou um arquivo específico
+    # Formato:
+    # python tspd.py "caminho diretorio/arquivo"
     # após resolução do problema
     # escreve em arquivo a solução obtida. 
     if len(sys.argv) > 1:
-        if sys.argv[1].strip() == "1":
-            count = 0
-            path = ".\\data\\solutions\\doublecenter"
-            file_location = []
-            for file in os.listdir(path):
-                if file.endswith(".sol"):
-                    count += 1
-                    file_location.append(f"{path}\{file}".strip())
-        elif sys.argv[1].strip() == "2":
-            count = 0
-            path = ".\\data\\solutions\\singlecenter"
-            file_location = []
-            for file in os.listdir(path):
-                if file.endswith(".sol"):
-                    count += 1
-                    file_location.append(f"{path}\{file}".strip())
-        elif sys.argv[1].strip() == "3":
-            count = 0
-            path = ".\\data\\solutions\\uniform"
-            file_location = []
-            for file in os.listdir(path):
-                if file.endswith(".sol"):
-                    count += 1
-                    file_location.append(f"{path}\{file}".strip())
-        elif sys.argv[1].strip() == "4": # Faça todos os passos anteriores
-            count = 0
-            path = ".\\data\\solutions\\doublecenter"
-            file_location = []
-            for file in os.listdir(path):
-                if file.endswith(".sol"):
-                    count += 1
-                    file_location.append(f"{path}\{file}".strip())
-            
-            path = ".\\data\\solutions\\singlecenter"
-            for file in os.listdir(path):
-                if file.endswith(".sol"):
-                    count += 1
-                    file_location.append(f"{path}\{file}".strip())
-            
-            path = ".\\data\\solutions\\uniform"
-            for file in os.listdir(path):
-                if file.endswith(".sol"):
-                    count += 1
-                    file_location.append(f"{path}\{file}".strip())
+        count = 0
+        path = sys.argv[1].strip()
+        file_location = []
+        if path.endswith(".sol"):
+            count += 1
+            file_location.append(f"{path}".strip())
         else:
-            file_location = sys.argv[1].strip()
-            # fazer pré-processamento adequado para tipo de solução
-            # nossa ou do autor do dataset.
-            if file_location.find("author-value") != -1:
-                instance_file_location = file_location.replace("solutions", "instances")
-                instance_file_location = instance_file_location.replace("-tsp-author-value", "")
-                instance_file_location = instance_file_location.split(".sol")
-                instance_file_location = instance_file_location[0] + ".txt"
-            else:
-                instance_file_location = file_location.replace("solutions", "instances")
-                instance_file_location = instance_file_location.split(".sol")
-                instance_file_location = instance_file_location[0] + ".txt"
-            with open(instance_file_location, 'r') as input_data_file:
-                input_data = input_data_file.read()
-            read_data_sol(input_data, file_location)
-            file_location = file_location.replace("solutions", "images")
-            file_location = file_location.split(".sol")
-            plt.savefig(file_location[0])
-            sys.exit()
+            for file in os.listdir(path):
+                if file.endswith(".sol"):
+                    count += 1
+                    file_location.append(f"{path}\{file}".strip())
         with Bar('Processing...', max=count) as bar:
             for file in file_location:
                 if file.find("author-value") != -1:
