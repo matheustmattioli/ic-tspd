@@ -3,6 +3,7 @@ from platform import node
 import sys
 from collections import namedtuple
 from time import time
+from numpy import double
 from progress.bar import Bar
 import os
 import math
@@ -81,8 +82,10 @@ def create_nodes(node_count, file_location):
     with open(file_location, 'r') as input_data_file:
             input_data = input_data_file.read()
     lines = pass_comments(input_data)
-    speed_truck = float(lines[0])
-    speed_drone = float(lines[1])
+    speed_truck = 1/float(lines[0])
+    speed_drone = 1/float(lines[1])
+    print("speed_truck = ", speed_truck)
+    print("speed_drone = ", speed_drone)
     nodes = []
     for i in range(3, node_count + 3):
         line = lines[i]
@@ -144,7 +147,7 @@ def calc_sol(count_operation, nodes, operations, speed_truck, speed_drone):
     # Nessa função é calculado o custo da solução
     # obtida pelo autor do dataset
     cost_obj = float(calc_obj(operations, speed_truck, speed_drone, nodes))
-    
+    print("cost_obj = ", cost_obj)
     # # Construir Truck Tour e Drone Tour a partir de operations
     # truck_tour = [] # Podemos ter mais de um circuito por caminhão
     # drone_tour = [] # Os triangulos formados pelo drone
