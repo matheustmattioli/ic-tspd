@@ -137,6 +137,7 @@ if __name__ == '__main__':
                 read_data_sol(input_data, file)
                 file = file.replace("solutions", "images")
                 file = file.split(".sol")
+                # plt.show()
                 plt.savefig(file[0])
                 plt.clf()
                 bar.next()

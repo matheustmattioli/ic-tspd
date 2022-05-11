@@ -14,7 +14,7 @@ from progress.bar import Bar
 
 def make_data_csv(input_data, file_name):
     # read data
-    #print(input_data)
+    # print(input_data)
     tspd_value = input_data[0].split('\n')
     auth_data = input_data[1].split('\n')
     our_data = input_data[2].split('\n')
@@ -43,6 +43,7 @@ if __name__ == '__main__':
                 first_it = 0
             else:
                 path = input("Digite o endereco do diretorio:")
+            # EXEMPLOS:
             # path = ".\\data\\solutions\\doublecenter"
             # path = ".\\data\\solutions\\filtered_data\\pequenas"
             file_location = []
@@ -59,7 +60,7 @@ if __name__ == '__main__':
             count = count/3
             with Bar('Processing...', max=count) as bar:
                 for file in file_location:
-                    #print(file)
+                    # print(file)
                     if count_input == 0 and file.find("sMIP") == -1:
                         input_data.append(" \n")
                         count_input += 1
@@ -72,7 +73,7 @@ if __name__ == '__main__':
                     count_input += 1
                     if count_input == 3:
                         count_input = 0 
-            # Posso adaptar por slice em string  tb              
+                          
             name_path = path.split('\\')     
             with open(".\\data\\solutions\\sols_" + name_path[-2] + ".csv", 'w', newline='') as f:
                 writer = csv.writer(f)

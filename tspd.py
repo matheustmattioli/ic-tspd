@@ -5,6 +5,7 @@ import libs.GRASP as GRASP
 import time     # Para verificar quanto tempo nossa solução consome
 from libs.greedyRCL import greedypath_RCL
 from libs.localSearch import localSearch2OPT # Vamos utilizar Metaheurística GRASP-VND para resolver TSP
+from libs.spikes import spikes_tsp
 from progress.bar import Bar # Para verificar o avanço da nossa resposta
 from collections import namedtuple
 
@@ -96,9 +97,11 @@ def solve_tspd(node_count, nodes):
     # Teste com algoritmo guloso aleatorizado
     # solution = greedypath_RCL(node_indexes, nodes, 0.25)
     # Teste com GRASP
-    solution = GRASP.grasp_2opt(node_indexes, nodes)
+    # solution = GRASP.grasp_2opt(node_indexes, nodes)
     # Teste com GRASP-VND
     # solution = GRASP.grasp_vnd(node_indexes, nodes)
+    # Teste com heurística de formação de bicos
+    solution = spikes_tsp(node_indexes, nodes)
     
     # Calcula custo do TSP
     # TODO: Alterar para TSP-D
