@@ -118,7 +118,7 @@ if __name__ == '__main__':
             file_location.append(f"{path}".strip())
         else:
             for file in os.listdir(path):
-                if file.endswith(".sol"):
+                if file.endswith(".sol") and not "author" in file:
                     count += 1
                     file_location.append(f"{path}\{file}".strip())
         with Bar('Processing...', max=count) as bar:

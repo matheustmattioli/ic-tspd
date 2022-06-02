@@ -62,8 +62,8 @@ def read_data(input_data):
     numerical_input = pass_comments(input_data)
 
     # Coleta a velocidade do caminhão e drone.
-    speed_truck = float(numerical_input[0])
-    speed_drone = float(numerical_input[1])
+    speed_truck = 1/float(numerical_input[0])
+    speed_drone = 1/float(numerical_input[1])
 
     # Coleta a quantidade de vértices.
     node_count = int(float(numerical_input[2]))
@@ -84,10 +84,10 @@ def read_data(input_data):
                 f"index do cliente = {node.index}, ({node.x}, {node.y})")
         print()
 
-    return solve_tspd(node_count, nodes)
+    return solve_tspd(node_count, nodes, speed_truck, speed_drone)
 
 
-def solve_tspd(node_count, nodes):
+def solve_tspd(node_count, nodes, speed_truck, speed_drone):
     # TODO: Nessa função vamos resolver o problema do TSP-D,
     # por enquanto vamos testar o resultado do GRASP-VND do TSP nessas instâncias.
     start_time = time.time()
