@@ -54,7 +54,7 @@ if __name__ == '__main__':
 
             # para coletar o valor do autor e o nosso ao mesmo tempo,
             # vamos enviar para a função make_data_csv os dois input_data ao mesmo tempo
-            row_list = [["Nome Instancia", "Solucao otima TSP", "Solucao GRASP TSP", "Tempo GRASP TSP", "Solucao TSPD"]]
+            row_list = [["Nome Instancia", "Solucao otima TSP", "Solucao TSPD Grafo Aux", "Tempo TSPD Grafo Aux", "Solucao TSPD Paper"]]
             input_data = []
             count_input = 0
             count = count/3

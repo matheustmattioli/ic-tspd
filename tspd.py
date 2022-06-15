@@ -104,67 +104,16 @@ def solve_tspd(node_count, nodes, speed_truck, speed_drone):
     # solution = GRASP.grasp_vnd(node_indexes, nodes)
     # Teste com heurística de formação de bicos
     solution = spikes_tsp(node_indexes, nodes)
-    solution_tspd = make_tspd_sol(solution, speed_truck, speed_drone, nodes)
+    solution_tspd, operations = make_tspd_sol(solution, speed_truck, speed_drone, nodes)
 
     # Separar as operacoes contidas em solution_tspd
     truck_nodes = solution_tspd[0]
     drone_nodes = solution_tspd[1]
-    operations = []
-    for k_drone_node in drone_nodes:
-        launch_node = k_drone_node[0]
-        rendezvous_node = k_drone_node[2]
-        op_drone_nodes = [launch_node, k_drone_node[1], rendezvous_node]
-        op_truck_nodes = []
-        for index_truck_node in range(len(truck_nodes)):
-            if truck_nodes[index_truck_node] == launch_node:
-                start_operation = index_truck_node
-            elif truck_nodes[index_truck_node] == rendezvous_node:
-                end_operation = index_truck_node
-        for i in range(start_operation, end_operation + 1):
-            op_truck_nodes.append(truck_nodes[i])
-        operations.append(op_truck_nodes, op_drone_nodes)
-    # verificar se alguma subsequencia ficou de fora das operacoes
-    truck_nodes_out = []
-    for i in truck_nodes:
-        contain = 0
-        for op in operations:
-            for j in op[0]:
-                if i == j:
-                    contain = 1
-        if contain == 0:
-            truck_nodes_out.append(i)
-    # observar vertices adjacentes no circuito do caminhao e separar em operacoes
-    if len(truck_nodes_out) > 0:
-        while len(truck_nodes_out) > 0:
-            seq = 0 # verificar se faz parte da mesma operacao
-            start = 1 # verificar se eh o primeiro no da operacao
-            start_node_op = -1
-            pos_start_node_op = -1
-            truck_nodes_seq = []
-            for i in truck_nodes_out:
-                for j in range(len(truck_nodes)):
-                    if truck_nodes[j] == start_node_op:
-                        seq = 0
-                    elif j > pos_start_node_op:
-                        seq += 1
-                    if truck_nodes[j] == i and start == 1:
-                        truck_nodes_seq.append(i)
-                        truck_nodes_out.remove(i)
-                        start = 0
-                        start_node_op = i
-                        pos_start_node_op = j
-                        break
-                    if truck_nodes[j] == i and seq == 1:
-                        truck_nodes_seq.append(i)
-                        truck_nodes_out.remove(i)
-                        seq = 0
-            if len(truck_nodes_seq) == 1:
-                truck_nodes_seq = [truck_nodes[pos_start_node_op - 1], start_node_op, \
-                    truck_nodes[pos_start_node_op + 1]]
-            operations.append(truck_nodes_seq, [])
 
+    print("operations = ", operations)
     # Calcula custo do TSP-D
     cost_obj = calc_obj(operations, speed_truck, speed_drone, nodes)
+    print(cost_obj)
     end_time = time.time()
     duration_time = end_time - start_time
     
@@ -196,17 +145,17 @@ if __name__ == '__main__':
                 if file.endswith(".txt"):
                     count += 1
                     file_location.append(f"{path}\{file}".strip())
-        # with Bar('Processing...', max=count) as bar:
-        for file in file_location:
-            with open(file, 'r') as input_data_file:
-                input_data = input_data_file.read()
-            output_data = read_data(input_data)
-            file = file.replace("instances", "solutions")
-            file = file.split(".txt")
-            solution_file = open(file[0].strip() + ".sol", "w")
-            solution_file.write(output_data)
-            solution_file.close()
-            # bar.next()
+        with Bar('Processing...', max=count) as bar:
+            for file in file_location:
+                with open(file, 'r') as input_data_file:
+                    input_data = input_data_file.read()
+                output_data = read_data(input_data)
+                file = file.replace("instances", "solutions")
+                file = file.split(".txt")
+                solution_file = open(file[0].strip() + ".sol", "w")
+                solution_file.write(output_data)
+                solution_file.close()
+                bar.next()
     else:
         print('This test requires an input file.  Please select one from the data directory. \
              (i.e. python tspd.py ./data/instances/singlecenter/singlecenter-1-n5.txt)')
