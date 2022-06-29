@@ -101,16 +101,16 @@ def solve_tspd(node_count, nodes, speed_truck, speed_drone):
     # Teste com GRASP
     # solution = GRASP.grasp_2opt(node_indexes, nodes)
     # Teste com GRASP-VND
-    # solution = GRASP.grasp_vnd(node_indexes, nodes)
+    solution = GRASP.grasp_vnd(node_indexes, nodes)
     # Teste com heurística de formação de bicos
-    solution = spikes_tsp(node_indexes, nodes)
+    # solution = spikes_tsp(node_indexes, nodes)
     solution_tspd, operations = make_tspd_sol(solution, speed_truck, speed_drone, nodes)
 
     # Separar as operacoes contidas em solution_tspd
     truck_nodes = solution_tspd[0]
     drone_nodes = solution_tspd[1]
 
-    print("operations = ", operations)
+    # print("operations = ", operations)
     # Calcula custo do TSP-D
     cost_obj = calc_obj(operations, speed_truck, speed_drone, nodes)
     print(cost_obj)

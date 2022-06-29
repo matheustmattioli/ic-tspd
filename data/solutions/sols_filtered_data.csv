@@ -1,0 +1,10 @@
+Nome Instancia,Solucao otima TSP,Solucao GRASP TSP,Tempo GRASP TSP,Solucao TSPD
+doublecenter-2-n250,5627.67,5501.22,0.01,
+doublecenter-alpha_1-3-n250,5627.67,5034.25,0.01,
+doublecenter-alpha_3-3-n250,5384.0,5034.25,0.01,
+singlecenter-113-n250,4135.63,4173.9,0.01,
+singlecenter-alpha_1-7-n250,4135.63,4111.26,0.01,
+singlecenter-alpha_3-8-n250,3744.93,4309.71,0.01,
+uniform-8-n250,2359.08,2278.98,0.01,
+uniform-alpha_1-7-n250,2388.83,2391.72,0.01,
+uniform-alpha_3-9-n250,2462.17,2502.4,0.01,

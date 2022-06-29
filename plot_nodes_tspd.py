@@ -58,7 +58,7 @@ def read_data_sol(input_data, file_location):
     # Armazena as coordenadas do vértice i
     dictofpositions = {i: (nodes[i].x, nodes[i].y)
                        for i in range(0, node_count)}
-
+    dictofpositions[node_count] = (nodes[0].x, nodes[0].y)
     # Por fim, podemos mandar imprimir a solução
     plot_sol(node_count, nodes, dictofpositions, file_location)
 
@@ -66,13 +66,9 @@ def read_data_sol(input_data, file_location):
 def plot_sol(node_count, nodes, dictofpositions, file_location):
     # As próximas linhas realizam a leitura
     # do tour construído para TSP
-    # TODO: Adaptar para TSP-D
 
     instance_sol_file = open(file_location, "r")
 
-    # TODO: Ainda é necessário adaptar a separação em
-    # uma lista de clientes atendidos por drone e
-    # outra por caminhões.
     solution_data = instance_sol_file.read()
     instance_sol_file.close()
 
@@ -157,7 +153,7 @@ if __name__ == '__main__':
                 read_data_sol(input_data, file)
                 file = file.replace("solutions", "images")
                 file = file.split(".sol")
-                plt.show()
+                # plt.show()
                 plt.savefig(file[0])
                 plt.clf()
                 bar.next()
