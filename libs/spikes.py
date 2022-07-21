@@ -7,6 +7,7 @@ def spikes_tsp(circuit, customers):
     best_obj = float('inf')
 
     # Change range value to test circuit starting in dif nodes
+    # with range(1) only starts at 0 aka depot
     for v in range(1):
         dict_positions = {circuit[i] : circuit[i] for i in range(len_circuit)}
         solution_greedy = [0 for i in range(len_circuit)]
