@@ -6,8 +6,7 @@ from libs.GRASP import grasp_2opt # Metaheurística GRASP para resolver TSP
 from libs.GRASP import grasp_vnd # Metaheurística GRASP-VND para resolver TSP
 from libs.greedyRCL import greedypath_RCL # Heurística gulosa-aleatorizada para TSP
 from libs.spikes import spikes_tsp # Heurística gulosa-aleatorizada geradora de bicos para TSP
-from libs.split import make_tspd_sol # Realiza entrega por drones, solução para TSPD
-from adapter.adapt_tspd_author import calc_obj # Calcular função objetivo do TSPD
+from libs.utilities import calc_obj # Calcular função objetivo do TSPD
 from progress.bar import Bar  # Para verificar o avanço da nossa resposta
 from collections import namedtuple 
 
@@ -84,10 +83,10 @@ def read_data(input_data):
                 f"index do cliente = {node.index}, ({node.x}, {node.y})")
         print()
 
-    return solve_tspd(node_count, nodes, speed_truck, speed_drone, 2)
+    return solve_tsp(node_count, nodes, 2)
 
 
-def solve_tspd(node_count, nodes, speed_truck, speed_drone, tsp_choice):
+def solve_tsp(node_count, nodes, tsp_choice):
 
     # Nessa função vamos resolver o problema do TSP-D,
     start_time = time.time()
@@ -119,23 +118,8 @@ def solve_tspd(node_count, nodes, speed_truck, speed_drone, tsp_choice):
                 solution_tsp[:depot_index]
             break
 
-    # Construção do grafo auxiliar e das entregas por drone
-    solution_tspd, operations = make_tspd_sol(
-        solution_tsp, speed_truck, speed_drone, nodes)
-
-    # Separar as operacoes contidas em solution_tspd
-    truck_nodes = solution_tspd[0]
-    drone_nodes = solution_tspd[1]
-
-
-    if DEBUG == 5:
-        print("operations = ", operations)
-
-    # TODO: Busca Local no TSP-D
-
-
-    # Calcula custo do TSP-D
-    cost_obj = calc_obj(operations, speed_truck, speed_drone, nodes)
+    # Calcula custo do TSP
+    cost_obj = calc_obj(solution_tsp, nodes)
     if DEBUG == 5:
         print(cost_obj)
     
@@ -145,12 +129,8 @@ def solve_tspd(node_count, nodes, speed_truck, speed_drone, tsp_choice):
 
     # Formata a solução obtida para escrevermos em um arquivo
     output_data = '%.2f' % cost_obj + '\n' + '%.2f' % duration_time + '\n'
-    output_data += " ".join([str(truck_nodes[i])
-                            for i in range(len(truck_nodes))]) + '\n'
-    for k_drone_node in drone_nodes:
-        output_data += " ".join([str(k_drone_node[i])
-                                for i in range(len(k_drone_node))]) + '\n'
-
+    output_data += " ".join([str(solution_tsp[i])
+                            for i in range(len(solution_tsp))]) + '\n'
     return output_data
 
 
