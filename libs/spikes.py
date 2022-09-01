@@ -29,7 +29,6 @@ def spikes_tsp(array_nodes, customers, ALPHA):
             nearest_value = np.inf
             second_nearest_value = np.inf   
             furthest_value = -np.inf
-            second_furthest_value = -np.inf
             
             # Escolher vértice mais distante, segundo mais distante, 
             # mais próximo e segundo mais próximo.
@@ -48,44 +47,38 @@ def spikes_tsp(array_nodes, customers, ALPHA):
                             nearest_value = length_candidate_node
                         else:
                             second_nearest_value = length_candidate_node
-                    # Lógica para decidir vértice mais distante e segundo mais distante.
-                    if length_candidate_node > second_furthest_value:
-                        if length_candidate_node > furthest_value:
-                            # Se for o mais distante, atualiza o antigo mais distante para segundo 
-                            # mais distante.
-                            second_furthest_value = furthest_value
-                            
-                            # Atualiza os valores para furthest value
-                            furthest_value = length_candidate_node
-                        else:
-                            second_furthest_value = length_candidate_node
+                    # Escolher o vértice mais distante.
+                    if length_candidate_node > furthest_value:
+                        # Atualiza os valores para furthest value
+                        furthest_value = length_candidate_node
                         
-            # A ideia é utilizar uma lista de candidatos mais próximo e segundo mais próximo.
-            rcl_nearest_value = []
-            rcl_second_nearest_value = []
+            # A ideia é utilizar uma lista de candidatos utilizando mais próximo e segundo mais próximo no calculo.
+            rcl = []
+    
             # Preencher a RCL
             for candidate_node in array_nodes:
                 if candidate_node in dict_nodes:
                     length_candidate_node = utilities.length(
                         customers[solution_spiked[insert_position - 1]], customers[candidate_node])
-                    # Verificar se o vértice está no range de valores do mais próximo ou do 
-                    # segundo mais próximo.
-                    if length_candidate_node <= nearest_value + (furthest_value - nearest_value)*ALPHA:
-                        # Inserir o nó na rcl de mais próximos
-                        rcl_nearest_value.append(candidate_node)
-                    elif length_candidate_node <= second_nearest_value + (second_furthest_value - second_nearest_value)*ALPHA:
-                        # Inserir o nó na rcl de segundo mais próximo
-                        rcl_second_nearest_value.append(candidate_node)
-
-
-            # Inserir o segundo vértice mais próximo primeiro em k + 1 e o mais próximo em k + 2
+                    # Verificar se o vértice está no range de valores da RCL segundo a equação:
+                    # second_nearest + (furthest - second_nearest)*ALPHA 
+                    # Cálculo só funciona se houver um second_nearest...
+                    # Tratando o caso em que não existe second_nearest
+                    if second_nearest_value == np.inf:
+                        second_nearest_value = nearest_value
+                    if length_candidate_node <= second_nearest_value + (furthest_value - second_nearest_value)*ALPHA:
+                        # Inserir o nó na rcl 
+                        rcl.append(candidate_node)
+                   
             # Repetir até que insert_position >= size_circuit
-            if rcl_second_nearest_value:
-                solution_spiked[insert_position] = random.choice(rcl_second_nearest_value)
+            if rcl:
+                solution_spiked[insert_position] = random.choice(rcl)
+                rcl.remove(solution_spiked[insert_position])
                 dict_nodes.pop(solution_spiked[insert_position])
                 insert_position += 1
-            if insert_position < size_circuit and rcl_nearest_value:
-                solution_spiked[insert_position] = random.choice(rcl_nearest_value)
+            if insert_position < size_circuit and rcl:
+                solution_spiked[insert_position] = random.choice(rcl)
+                rcl.remove(solution_spiked[insert_position])
                 dict_nodes.pop(solution_spiked[insert_position])
                 insert_position += 1
 
