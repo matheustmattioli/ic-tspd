@@ -1,11 +1,12 @@
 import random
+from re import I
 from turtle import speed
 import libs.utilities as utilities
 import numpy as np
 
 # Heurística construtiva para TSP.
 # Comportamento Guloso-Aleatorizado.
-def ellipse(array_nodes, customers, ALPHA, drone_speed):
+def ellipse(array_nodes, customers, ALPHA, drone_speed, truck_speed):
 
     # Formar um circuito com vértices interessantes para entregas por drone,
     # para isso vamos selecionar vértices em uma vizinhança em formato de "elipse" 
@@ -14,7 +15,7 @@ def ellipse(array_nodes, customers, ALPHA, drone_speed):
     dict_nodes = {array_nodes[i] : array_nodes[i] for i in range(size_circuit)}
     solution_ellipse = [0 for i in range(size_circuit)]
     insert_position = 0
-    solution_ellipse[insert_position] = dict_nodes.pop(random.choice(array_nodes))
+    solution_ellipse[insert_position] = dict_nodes.pop(0)
     insert_position += 1
 
     while insert_position < size_circuit:
@@ -23,7 +24,6 @@ def ellipse(array_nodes, customers, ALPHA, drone_speed):
         # enquanto o caminhão vai até o nó mais próximo
 
         nearest_value = np.inf
-        nearest_node = -1
         furthest_value = -np.inf
         
         # Escolher vértice mais distante, segundo mais distante, 
@@ -35,41 +35,60 @@ def ellipse(array_nodes, customers, ALPHA, drone_speed):
                 # Lógica para analisar vértice mais próximo
                 if length_candidate_node < nearest_value:
                     nearest_value = length_candidate_node
-                    nearest_node = candidate_node
                 # Escolher o vértice mais distante.
                 if length_candidate_node > furthest_value:
                     # Atualiza os valores para furthest value
                     furthest_value = length_candidate_node
 
         # RCL com nós em uma distância elíptica do nó atual.
-        rcl_ellipse = []
+        rcl = []
 
-        # Calcular distância máxima percorrida pelo drone
-        # enquanto o caminhão viaja para o nó mais próximo.
-        speed_truck = 1
-        truck_distance = nearest_value*speed_truck
-        drone_distance = (truck_distance/2)*speed
-
-        # Preencher a RCL
+         # Preencher a RCL
         for candidate_node in array_nodes:
             if candidate_node in dict_nodes:
                 length_candidate_node = utilities.length(
                     customers[solution_ellipse[insert_position - 1]], customers[candidate_node])
-                # Verifica se está na "elipse"
-                # O ALPHA utilizado é uma constante para tolerância de atraso.
-                if length_candidate_node <= drone_distance*ALPHA:
+                # Verificar se o vértice está no range de valores da RCL segundo a equação:
+                # nearest + (furthest - nearest)*ALPHA 
+                if length_candidate_node <= (nearest_value + (furthest_value - nearest_value)*ALPHA):
                     # Inserir o nó na rcl 
+                    rcl.append(candidate_node)
+        
+
+        # Distancia do nó analisado para origem e destino.
+        # Cálculo dessa rcl:
+        # dist_orig + dist_dest <= nearest_value*(drone_speed/truck_speed)*(1 + ALPHA)
+        # Caso essa rcl seja vazia, insira apenas o dest_node.
+        
+        orig_node = solution_ellipse[insert_position - 1]
+        dest_node = random.choice(rcl)
+        dict_nodes.pop(dest_node)
+        rcl_ellipse = []
+
+        # Preencher a rcl_ellipse 
+        for candidate_node in array_nodes:
+            if candidate_node in dict_nodes:
+                dist_orig = utilities.length(
+                    customers[orig_node], customers[candidate_node])
+                dist_dest = utilities.length(
+                    customers[dest_node], customers[candidate_node]
+                )
+                # Verifica se está na elipse
+                if dist_orig + dist_dest <= nearest_value*(drone_speed/truck_speed)*(1 + ALPHA):
+                    # Inserir o nó na rcl_ellipse 
                     rcl_ellipse.append(candidate_node)
 
-        solution_ellipse[insert_position] = nearest_node
-        dict_nodes.pop(nearest_node)
-        insert_position += 1
-        if nearest_node in rcl_ellipse:
-            rcl_ellipse.remove(nearest_node)
-        if rcl_ellipse and insert_position < size_circuit:
-            solution_ellipse[insert_position] = random.choice(rcl_ellipse)
+        # Inserir um nó da elipse e depois o nó destino
+        if rcl_ellipse:
+            random.shuffle(rcl_ellipse)
+            solution_ellipse[insert_position] = rcl_ellipse.pop()
             dict_nodes.pop(solution_ellipse[insert_position])
             insert_position += 1
+            solution_ellipse[insert_position] = dest_node
+        else:
+            solution_ellipse[insert_position] = dest_node
+        insert_position += 1
+   
     dict_nodes.clear()
 
     return solution_ellipse

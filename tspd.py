@@ -2,7 +2,7 @@ import sys      # Necessário para ler info do terminal
 import os       # Para ler todas as instâncias de uma pasta
 import math     # Para cálculo de distâncias no plano euclidiano
 import time     # Para verificar quanto tempo nossa solução consome
-from libs.GRASP import grasp_2opt # Metaheurística GRASP para resolver TSP
+from libs.GRASP import grasp_2opt, grasp_tspd # Metaheurística GRASP para resolver TSP
 from libs.GRASP import grasp_vnd # Metaheurística GRASP-VND para resolver TSP
 from libs.greedyRCL import greedypath_RCL # Heurística gulosa-aleatorizada para TSP
 from libs.spikes import spikes_tsp # Heurística gulosa-aleatorizada geradora de bicos para TSP
@@ -15,7 +15,7 @@ from collections import namedtuple
 # cada vértice é representado por index
 Node = namedtuple("Node", ['x', 'y', 'index'])
 
-DEBUG = 5       # Variável global para debug do código.
+DEBUG = 0       # Variável global para debug do código.
 
 
 def length(node1, node2):
@@ -84,61 +84,16 @@ def read_data(input_data):
                 f"index do cliente = {node.index}, ({node.x}, {node.y})")
         print()
 
-    return solve_tspd(node_count, nodes, speed_truck, speed_drone, 2)
+    return solve_tspd(node_count, nodes, speed_truck, speed_drone, 1)
 
 
 def solve_tspd(node_count, nodes, speed_truck, speed_drone, tsp_choice):
 
     # Nessa função vamos resolver o problema do TSP-D,
     start_time = time.time()
-    node_indexes = []
-    for node in nodes:
-        node_indexes.append(node.index)
 
-    
-    # Teste com algoritmo guloso aleatorizado
-    if tsp_choice == 1:
-        solution_tsp = greedypath_RCL(node_indexes, nodes, 0.25)
+    cost_obj, truck_nodes, drone_nodes = grasp_tspd(node_count, nodes, speed_truck, speed_drone, tsp_choice)
 
-    # Teste com heurística de formação de bicos
-    if tsp_choice == 2:
-        solution_tsp = spikes_tsp(node_indexes, nodes, 0.25)
-
-    # Teste com GRASP
-    if tsp_choice == 3:
-        solution_tsp = grasp_2opt(node_indexes, nodes)
-    
-    # Teste com GRASP-VND
-    if tsp_choice == 4:
-        solution_tsp = grasp_vnd(node_indexes, nodes)
-
-    # Tratamento para retornar o depósito para início do circuito.
-    for depot_index in range(len(solution_tsp)):
-        if solution_tsp[depot_index] == 0:
-            solution_tsp = solution_tsp[depot_index:] + \
-                solution_tsp[:depot_index]
-            break
-
-    # Construção do grafo auxiliar e das entregas por drone
-    solution_tspd, operations = make_tspd_sol(
-        solution_tsp, speed_truck, speed_drone, nodes)
-
-    # Separar as operacoes contidas em solution_tspd
-    truck_nodes = solution_tspd[0]
-    drone_nodes = solution_tspd[1]
-
-
-    if DEBUG == 5:
-        print("operations = ", operations)
-
-    # TODO: Busca Local no TSP-D
-
-
-    # Calcula custo do TSP-D
-    cost_obj = calc_obj(operations, speed_truck, speed_drone, nodes)
-    if DEBUG == 5:
-        print(cost_obj)
-    
     # Tempo de execução da instância
     end_time = time.time()
     duration_time = end_time - start_time
@@ -174,17 +129,17 @@ if __name__ == '__main__':
                 if file.endswith(".txt"):
                     count += 1
                     file_location.append(f"{path}\{file}".strip())
-        # with Bar('Processing...', max=count) as bar:
-        for file in file_location:
-            with open(file, 'r') as input_data_file:
-                input_data = input_data_file.read()
-            output_data = read_data(input_data)
-            file = file.replace("instances", "solutions")
-            file = file.split(".txt")
-            solution_file = open(file[0].strip() + ".sol", "w")
-            solution_file.write(output_data)
-            solution_file.close()
-                # bar.next()
+        with Bar('Processing...', max=count) as bar:
+            for file in file_location:
+                with open(file, 'r') as input_data_file:
+                    input_data = input_data_file.read()
+                output_data = read_data(input_data)
+                file = file.replace("instances", "solutions")
+                file = file.split(".txt")
+                solution_file = open(file[0].strip() + ".sol", "w")
+                solution_file.write(output_data)
+                solution_file.close()
+                bar.next()
     else:
         print('This test requires an input file.  Please select one from the data directory. \
              (i.e. python tspd.py ./data/instances/singlecenter/singlecenter-1-n5.txt)')

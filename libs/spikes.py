@@ -66,21 +66,45 @@ def spikes_tsp(array_nodes, customers, ALPHA):
                     # Tratando o caso em que não existe second_nearest
                     if second_nearest_value == np.inf:
                         second_nearest_value = nearest_value
+
+                    # Testar com if abaixo.
+                    # if length_candidate_node <= (nearest_value + (furthest_value - nearest_value)*ALPHA)*speed_drone/2:
                     if length_candidate_node <= second_nearest_value + (furthest_value - second_nearest_value)*ALPHA:
                         # Inserir o nó na rcl 
                         rcl.append(candidate_node)
-                   
-            # Repetir até que insert_position >= size_circuit
-            if rcl:
-                solution_spiked[insert_position] = random.choice(rcl)
-                rcl.remove(solution_spiked[insert_position])
-                dict_nodes.pop(solution_spiked[insert_position])
+            
+            # Sortear dois pontos da RCL e inserir o mais distante primeiro (fazer a verificação)
+            random.shuffle(rcl)
+            candidate_node1 = rcl.pop()
+            # Se houverem elementos na lista e a próxima posição a ser inserido não estoura o tamanho do circuito
+            if rcl and (insert_position + 1) < size_circuit:
+                candidate_node2 = rcl.pop()
+                # Distância de cada um para o nó atual
+                length_candidate_node1 = utilities.length(
+                    customers[candidate_node1], customers[solution_spiked[insert_position - 1]]
+                )
+                length_candidate_node2 = utilities.length(
+                    customers[candidate_node2], customers[solution_spiked[insert_position - 1]]
+                )
+                if length_candidate_node1 > length_candidate_node2:
+                    solution_spiked[insert_position] = candidate_node1
+                    dict_nodes.pop(candidate_node1)
+                    insert_position += 1
+                    solution_spiked[insert_position] = candidate_node2
+                    dict_nodes.pop(candidate_node2)
+                    insert_position += 1
+                else:
+                    solution_spiked[insert_position] = candidate_node2
+                    dict_nodes.pop(candidate_node2)
+                    insert_position += 1
+                    solution_spiked[insert_position] = candidate_node1
+                    dict_nodes.pop(candidate_node1)
+                    insert_position += 1
+            else:
+                solution_spiked[insert_position] = candidate_node1
+                dict_nodes.pop(candidate_node1)
                 insert_position += 1
-            if insert_position < size_circuit and rcl:
-                solution_spiked[insert_position] = random.choice(rcl)
-                rcl.remove(solution_spiked[insert_position])
-                dict_nodes.pop(solution_spiked[insert_position])
-                insert_position += 1
+            
 
         # Decidir o melhor circuito encontrado
         curr_obj = utilities.calc_obj(solution_spiked, customers)
