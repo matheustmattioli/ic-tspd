@@ -84,7 +84,7 @@ def read_data(input_data):
                 f"index do cliente = {node.index}, ({node.x}, {node.y})")
         print()
 
-    return solve_tspd(node_count, nodes, speed_truck, speed_drone, 1)
+    return solve_tspd(node_count, nodes, speed_truck, speed_drone, 2)
 
 
 def solve_tspd(node_count, nodes, speed_truck, speed_drone, tsp_choice):
