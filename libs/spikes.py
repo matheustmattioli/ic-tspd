@@ -68,7 +68,8 @@ def spikes_tsp(array_nodes, customers, speed_drone, ALPHA):
                         second_nearest_value = nearest_value
 
                     # Testar com if abaixo.
-                    if length_candidate_node <= nearest_value + (furthest_value - nearest_value)*ALPHA*(speed_drone/2):
+                    # if length_candidate_node <= (nearest_value + (furthest_value - nearest_value)*ALPHA)*(speed_drone/2):
+                    if length_candidate_node <= nearest_value + (furthest_value - nearest_value) * ALPHA or length_candidate_node <= nearest_value * (speed_drone/2):
                     # if length_candidate_node <= second_nearest_value + (furthest_value - second_nearest_value)*ALPHA:
                         # Inserir o nó na rcl 
                         rcl.append(candidate_node)
