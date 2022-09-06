@@ -76,7 +76,7 @@ def grasp_tspd(node_count, nodes, speed_truck, speed_drone, tsp_choice):
 
         # Teste com heurística de formação de bicos
         if tsp_choice == 2:
-            solution_tsp = spikes_tsp(node_indexes, nodes, 0.25)
+            solution_tsp = spikes_tsp(node_indexes, nodes, speed_drone, 0.25)
 
         # Teste com GRASP
         if tsp_choice == 3:

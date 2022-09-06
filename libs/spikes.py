@@ -4,7 +4,7 @@ import random
 
 # Heurística construtiva para TSP.
 # Comportamento Guloso-Aleatorizado.
-def spikes_tsp(array_nodes, customers, ALPHA):
+def spikes_tsp(array_nodes, customers, speed_drone, ALPHA):
 
     # Objetivo é formar um circuito com a maior quantidade de "bicos" possível.
     # Isso é feito através da escolha do segundo vértice mais próximo do atual.
@@ -68,12 +68,13 @@ def spikes_tsp(array_nodes, customers, ALPHA):
                         second_nearest_value = nearest_value
 
                     # Testar com if abaixo.
-                    # if length_candidate_node <= (nearest_value + (furthest_value - nearest_value)*ALPHA)*speed_drone/2:
-                    if length_candidate_node <= second_nearest_value + (furthest_value - second_nearest_value)*ALPHA:
+                    if length_candidate_node <= nearest_value + (furthest_value - nearest_value)*ALPHA*(speed_drone/2):
+                    # if length_candidate_node <= second_nearest_value + (furthest_value - second_nearest_value)*ALPHA:
                         # Inserir o nó na rcl 
                         rcl.append(candidate_node)
             
             # Sortear dois pontos da RCL e inserir o mais distante primeiro (fazer a verificação)
+        
             random.shuffle(rcl)
             candidate_node1 = rcl.pop()
             # Se houverem elementos na lista e a próxima posição a ser inserido não estoura o tamanho do circuito
@@ -104,7 +105,7 @@ def spikes_tsp(array_nodes, customers, ALPHA):
                 solution_spiked[insert_position] = candidate_node1
                 dict_nodes.pop(candidate_node1)
                 insert_position += 1
-            
+
 
         # Decidir o melhor circuito encontrado
         curr_obj = utilities.calc_obj(solution_spiked, customers)
