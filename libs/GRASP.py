@@ -1,3 +1,4 @@
+import time
 import libs.greedyRCL as greedyRCL
 import libs.localSearch as localSearch
 import numpy as np
@@ -7,8 +8,9 @@ from libs.spikes import spikes_tsp
 from libs.split import make_tspd_sol
 
 ALPHA_MAX = 0.5
-N_ITE_GRASP = 5 # Number of iterations GRASP.
+N_ITE_GRASP = 1 # Number of iterations GRASP.
 MAX_ITER_W_NO_IMPROV = 1
+epsilon = 0.001
 
 def grasp_vnd(cluster_vehicle, customers):
     # Greedy Randomized Adaptative Search Procedure (GRASP) implementation with 
@@ -17,7 +19,7 @@ def grasp_vnd(cluster_vehicle, customers):
     ALPHA = 0
     n_iter_w_no_improv = 0
     t = 0 # see the number of iterations, for debug purposes.
-    while ALPHA < ALPHA_MAX and n_iter_w_no_improv < MAX_ITER_W_NO_IMPROV:
+    while ALPHA <= ALPHA_MAX + epsilon and n_iter_w_no_improv < MAX_ITER_W_NO_IMPROV:
         solution_vehicle = greedyRCL.greedypath_RCL(cluster_vehicle, customers, ALPHA)
         solution_vehicle, solution_obj = localSearch.localSearchVNS(solution_vehicle, customers)
         n_iter_w_no_improv += 1
@@ -25,9 +27,11 @@ def grasp_vnd(cluster_vehicle, customers):
             best_value = solution_obj
             best_solution_vehicle = list(solution_vehicle)
             n_iter_w_no_improv = 0
-            
-        ALPHA += ALPHA_MAX/N_ITE_GRASP
+
         t += 1
+        if N_ITE_GRASP == 1:
+            break;    
+        ALPHA += ALPHA_MAX/(N_ITE_GRASP - 1) 
     return best_solution_vehicle
 
 def grasp_2opt(cluster_vehicle, customers):
@@ -37,22 +41,29 @@ def grasp_2opt(cluster_vehicle, customers):
     ALPHA = 0
     n_iter_w_no_improv = 0
     t = 0 # see the number of iterations, for debug purposes.
-    while ALPHA < ALPHA_MAX and n_iter_w_no_improv < MAX_ITER_W_NO_IMPROV:
-        solution_vehicle = greedyRCL.greedypath_RCL(cluster_vehicle, customers, ALPHA)
+    while ALPHA <= ALPHA_MAX + epsilon and n_iter_w_no_improv < MAX_ITER_W_NO_IMPROV:
+        start = time.time()
+        solution_vehicle, solution_obj = greedyRCL.greedypath_RCL(cluster_vehicle, customers, ALPHA)
+        print(time.time() - start)
+        print(solution_obj)
+        start = time.time()
         solution_vehicle, solution_obj = localSearch.localSearch2OPT(solution_vehicle, customers)
+        print(time.time() - start)
+        print(solution_obj)
         n_iter_w_no_improv += 1
         if solution_obj < best_value:
             best_value = solution_obj
             best_solution_vehicle = list(solution_vehicle)
             n_iter_w_no_improv = 0
             
-        ALPHA += ALPHA_MAX/N_ITE_GRASP
         t += 1
+        if N_ITE_GRASP == 1:
+            break;    
+        ALPHA += ALPHA_MAX/(N_ITE_GRASP - 1) 
     return best_solution_vehicle
 
 def grasp_tspd(node_count, nodes, speed_truck, speed_drone, tsp_choice):
 
-    # TODO fazer grasp e testes
     # Para coleta de melhor solução global
     best_cost_obj = np.inf
     best_truck_nodes = []
@@ -68,15 +79,17 @@ def grasp_tspd(node_count, nodes, speed_truck, speed_drone, tsp_choice):
         node_indexes.append(node.index)
 
     # GRASP para TSPD
-    while alpha_grasp < ALPHA_MAX and n_iter_w_no_improv < MAX_ITER_W_NO_IMPROV:
+    while alpha_grasp <= ALPHA_MAX + epsilon and n_iter_w_no_improv < MAX_ITER_W_NO_IMPROV:
         
+        start = time.time()
+
         # Teste com algoritmo da estratégia de elipse
         if tsp_choice == 1:
-            solution_tsp =  ellipse(node_indexes, nodes, 0.25, speed_drone, speed_truck)
+            solution_tsp =  ellipse(node_indexes, nodes, alpha_grasp, speed_drone, speed_truck)
 
         # Teste com heurística de formação de bicos
         if tsp_choice == 2:
-            solution_tsp = spikes_tsp(node_indexes, nodes, speed_drone, 0.25)
+            solution_tsp = spikes_tsp(node_indexes, nodes, speed_drone, alpha_grasp)
 
         # Teste com GRASP
         if tsp_choice == 3:
@@ -86,6 +99,8 @@ def grasp_tspd(node_count, nodes, speed_truck, speed_drone, tsp_choice):
         if tsp_choice == 4:
             solution_tsp = grasp_vnd(node_indexes, nodes)
 
+        # print(time.time() - start)
+
         # Tratamento para retornar o depósito para início do circuito.
         for depot_index in range(len(solution_tsp)):
             if solution_tsp[depot_index] == 0:
@@ -94,8 +109,11 @@ def grasp_tspd(node_count, nodes, speed_truck, speed_drone, tsp_choice):
                 break
 
         # Construção do grafo auxiliar e das entregas por drone
+        start = time.time()
         solution_tspd, operations = make_tspd_sol(
             solution_tsp, speed_truck, speed_drone, nodes)
+
+        # print(time.time() - start)
 
         # Separar as operacoes contidas em solution_tspd
         truck_nodes = solution_tspd[0]
@@ -105,6 +123,7 @@ def grasp_tspd(node_count, nodes, speed_truck, speed_drone, tsp_choice):
 
         # Calcula custo do TSP-D
         cost_obj = calc_obj(operations, speed_truck, speed_drone, nodes)
+        # print(cost_obj)
 
         n_iter_w_no_improv += 1
         if cost_obj < best_cost_obj:
@@ -113,6 +132,8 @@ def grasp_tspd(node_count, nodes, speed_truck, speed_drone, tsp_choice):
             best_drone_nodes = list(drone_nodes)
             n_iter_w_no_improv = 0
             
-        alpha_grasp += ALPHA_MAX/N_ITE_GRASP
+        if N_ITE_GRASP == 1:
+            break;    
+        alpha_grasp += ALPHA_MAX/(N_ITE_GRASP - 1) 
     
     return best_cost_obj, best_truck_nodes, best_drone_nodes

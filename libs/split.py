@@ -55,7 +55,7 @@ def calc_cost(source, target, drone_node, tsp_tour, speed_truck, speed_drone, no
 
 def make_aux_graph(tsp_tour, speed_truck, speed_drone, nodes):
     # armazena as arestas do circuito do tsp
-    arcs = np.full((len(tsp_tour) + 1, len(tsp_tour) + 1), 0)
+    arcs = np.full((len(tsp_tour) + 1, len(tsp_tour) + 1), np.inf)
 
     drone_deliveries = dict()  # possiveis entregas por drone
 
@@ -65,6 +65,8 @@ def make_aux_graph(tsp_tour, speed_truck, speed_drone, nodes):
     # Matriz de adjacência com muitos 0, tem como melhorar
     # utilizando listas ligadas
     # pesquisar como usar listas ligadas em python
+
+    # matriz arcs indexados pelos rótulos dos vértices.
     n = len(tsp_tour)
     for i in range(n - 1):
         node_i = tsp_tour[i]
@@ -75,7 +77,7 @@ def make_aux_graph(tsp_tour, speed_truck, speed_drone, nodes):
          n] = length(nodes[tsp_tour[n - 1]], nodes[0])/speed_truck
 
     # Computar possiveis entregas por drone
-    for i in range(n):
+    for i in range(n - 1):
         for j in range(i + 2, n + 1):
             # Da para diminuir a constante desses laços
             aux = subtour_cost(i, j, tsp_tour, speed_truck, nodes)
@@ -99,24 +101,23 @@ def make_aux_graph(tsp_tour, speed_truck, speed_drone, nodes):
     # print(arcs)
     # print("drone_deliveries = ", drone_deliveries)
 
-    # TODO:
-    # Dijkstra?
+    
     # Encontrar o caminho mais curto dentre os arcos adicionados no grafo auxiliar
     pred_shortest_path = np.full(n + 1, -1)
-    cost_shortest_path = np.full(n + 1, float('inf'))
+    cost_shortest_path = np.full(n + 1, np.inf)
     pred_shortest_path[0] = 0
     cost_shortest_path[0] = 0
     tsp_tour.append(n)
 
     # Buscando apenas arcos de chegada, utilizar a matriz de adjacencia para melhorar o desempenho dessa parte
-    for i_rendezvous in range(1, n + 1):
-        for i_launch in range(0, i_rendezvous):
-            cost = arcs[tsp_tour[i_launch], tsp_tour[i_rendezvous]]
-            if cost > 0 and cost_shortest_path[tsp_tour[i_rendezvous]] > (cost_shortest_path[tsp_tour[i_launch]] + cost):
-                cost_shortest_path[tsp_tour[i_rendezvous]
-                                   ] = cost_shortest_path[tsp_tour[i_launch]] + cost
-                pred_shortest_path[tsp_tour[i_rendezvous]] = tsp_tour[i_launch]
+    for j in range(1, n + 1):
+        for i in range(0, j):
+            cost = arcs[tsp_tour[i], tsp_tour[j]]
+            if cost_shortest_path[tsp_tour[j]] > (cost_shortest_path[tsp_tour[i]] + cost):
+                cost_shortest_path[tsp_tour[j]] = cost_shortest_path[tsp_tour[i]] + cost
+                pred_shortest_path[tsp_tour[j]] = tsp_tour[i]
 
+    tsp_tour.pop()
     # print("shortest_path = ", shortest_path)
     # print("cost_shortest_path = ", cost_shortest_path)
     return drone_deliveries, pred_shortest_path, cost_shortest_path
@@ -128,7 +129,7 @@ def make_tspd_sol(tsp_tour, speed_truck, speed_drone, nodes):
         tsp_tour, speed_truck, speed_drone, nodes)
 
     # Constroi o caminho armazenado em shortest_path
-    j = len(tsp_tour) - 1
+    j = len(tsp_tour)
     shortest_path = []
     while j != 0:
         shortest_path.append(j)
@@ -136,8 +137,9 @@ def make_tspd_sol(tsp_tour, speed_truck, speed_drone, nodes):
     shortest_path.append(0)
     shortest_path.reverse()
 
-    # print("sol_shortest_path = ", sol_shortest_path)
+    # print("shortest_path = ", shortest_path)
     # print("tsp_tour = ", tsp_tour)
+    # print("drone_deliveries = ", drone_deliveries)
 
     # Cria uma solucao para tspd apartir de sol_shortest_path
     sol_drone = []
@@ -147,8 +149,10 @@ def make_tspd_sol(tsp_tour, speed_truck, speed_drone, nodes):
 
     # Entregas por drone e caminhão
     tam_solsp = len(shortest_path)
-    n = len(tsp_tour) - 1
+    n = len(tsp_tour)
     i = 0
+    i_launch = 0
+    
     while i < tam_solsp - 1:
         # Encontrar a entrega por drone associada a esse par de vértices
         launch = shortest_path[i]
@@ -169,15 +173,16 @@ def make_tspd_sol(tsp_tour, speed_truck, speed_drone, nodes):
         sol_drone.append(drone_tour)
         # Pegar o tour do caminhão associado a essa entrega por drone
         # vai do nó launch até o rendezvous.
-        truck_tour = []
+        truck_tour = [launch]
         # Encontrar posição do nó launch no tsp_tour
         # orig armazena a posição do vértice de lançamento
         # rend armazena a posição do vértice de encontro
-        i_launch = tsp_tour.index(launch)
-        i_rendezvous = tsp_tour.index(rendezvous)
-        for ind in range(i_launch, i_rendezvous + 1):
-            if tsp_tour[ind] != drone:
-                truck_tour.append(tsp_tour[ind])
+        i_rendezvous = i_launch + 1
+        while i_rendezvous < n and tsp_tour[i_rendezvous] != rendezvous:
+            if tsp_tour[i_rendezvous] != drone:
+                truck_tour.append(tsp_tour[i_rendezvous])
+            i_rendezvous += 1
+        truck_tour.append(rendezvous)
 
         # formatar a saída para formato utilizado até então
         # transformar todo nó tam_instancia em 0.
@@ -193,6 +198,7 @@ def make_tspd_sol(tsp_tour, speed_truck, speed_drone, nodes):
         sol_truck.append(truck_tour)
         operations.append([truck_tour, drone_tour])
         i += 1
+        i_launch = i_rendezvous
 
     # print("sol_truck = ", sol_truck)
     # print("sol_drone = ", sol_drone)

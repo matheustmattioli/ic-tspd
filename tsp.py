@@ -83,7 +83,7 @@ def read_data(input_data):
                 f"index do cliente = {node.index}, ({node.x}, {node.y})")
         print()
 
-    return solve_tsp(node_count, nodes, 2)
+    return solve_tsp(node_count, nodes, 3)
 
 
 def solve_tsp(node_count, nodes, tsp_choice):
@@ -126,6 +126,7 @@ def solve_tsp(node_count, nodes, tsp_choice):
     # Tempo de execução da instância
     end_time = time.time()
     duration_time = end_time - start_time
+    print(duration_time)
 
     # Formata a solução obtida para escrevermos em um arquivo
     output_data = '%.2f' % cost_obj + '\n' + '%.2f' % duration_time + '\n'
