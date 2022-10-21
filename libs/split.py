@@ -1,3 +1,4 @@
+from platform import node
 import numpy as np
 from libs.utilities import length
 
@@ -10,9 +11,8 @@ def subtour_cost(truck_i, truck_j, tsp_tour, speed, nodes):
         cost += length(nodes[tsp_tour[i]],
                        nodes[tsp_tour[(i + 1) % size_tsp_tour]])/speed
     return cost
+
 # Função para procurar elemento em lista
-
-
 def search(list, target):
     for i in range(len(list)):
         if list[i] == target:
@@ -20,8 +20,6 @@ def search(list, target):
     return -1
 
 # Função para deixar a lista de arrays em uma lista comum
-
-
 def flatten_list(_2d_list):
     flat_list = []
     for element in _2d_list:
@@ -33,9 +31,8 @@ def flatten_list(_2d_list):
     return flat_list
 
 # Calculo da função objetivo
-
-
 def calc_cost(source, target, drone_node, tsp_tour, speed_truck, speed_drone, nodes, subtour_cost):
+
     # Computando os custos da insercao de uma entrega por drone
     dist_prevk_nextk = length(
         nodes[tsp_tour[drone_node - 1]], nodes[tsp_tour[(drone_node + 1) % len(tsp_tour)]])/speed_truck
@@ -52,8 +49,124 @@ def calc_cost(source, target, drone_node, tsp_tour, speed_truck, speed_drone, no
     return max(subtour_cost + (dist_prevk_nextk - dist_prevk_k - dist_k_nextk), dist_ik
                + dist_kj)
 
+# TODO:
+def lazy_drone():
+    pass
+
+# O drone é "preguiçoso", ele não gastar muito tempo
+# em sua entrega i -> k -> j, só valores menores ou 
+# iguais ao tempo empregado pelo caminhão 
+# no percurso i -> j. Em outras palavras, o caminhão
+# não pode parar de rodar.
+# Recebe: 
+#   . um circuito que resolve um TSP;
+#   . velocidade do caminhão;
+#   . velocidade do drone;
+#   . os nós do grafo;
+def make_aux_graph_simple_lazy(tsp_tour, speed_truck, speed_drone, nodes):
+
+    # Matriz de adjacência. 
+    # Eficiência de O(n²) para operações de busca, 
+    # além de ocupar bastante espaço na memória
+    arcs = np.full((len(tsp_tour) + 1, len(tsp_tour) + 1), np.inf)
+
+    drone_deliveries = dict()  # possiveis entregas por drone
+
+    # Início construção do grafo auxiliar.
+    # Inserção das arestas do TSP em arcs,
+    # a matriz arcs é indexada pelos rótulos dos vértices do grafo.
+    n = len(tsp_tour)
+    for i in range(n - 1):
+        node_i = tsp_tour[i]
+        node_j = tsp_tour[i + 1]
+        arcs[node_i, node_j] = length(nodes[node_i], nodes[node_j])/speed_truck
+    # Arco do final pro começo para o nó artificial (réplica do depósito).
+    arcs[
+        tsp_tour[n - 1],
+        n
+        ] = length(nodes[tsp_tour[n - 1]], nodes[0])/speed_truck
+    
+    # Implementando versão simplificada, aquela em que
+    # escolhemos um nó do *caminho* para ser i (lançamento) 
+    # e outro para ser k (entrega do drone), daí os destinos são os vértices
+    # maiores que k até encontrarmos o primeiro vértice j
+    # com valor dist_caminhão(i -> j) >= dist_drone(i -> k -> j)
+    for i in range(n - 1): # 0, 1, ..., n - 2
+        # Para calcular a distância do caminhão entre i, j
+        # precisamos calcular a distância percorrida pelo caminhão a cada incremento de k
+        # para buscarmos a eficiência O(n²) no caso médio, que é o grande propósito dessa
+        # implementação.
+        dist_truck_ik = 0 # distância percorrida pelo caminhão seguindo a rota de i até k
+        for k in range(i + 1, n): # i + 1, i + 2, ..., n - 1
+            # Distâncias para cálculo da propriedade lazy
+            # Cálculo do caminho do caminhão
+            # no começo, i = k - 1
+            dist_truck_ik += length(
+                nodes[tsp_tour[k - 1]], nodes[tsp_tour[k]])/speed_truck
+
+            # Cálculo da ida do drone
+            dist_drone_ik = length(nodes[tsp_tour[i]],
+                     nodes[tsp_tour[k]])/speed_drone
+
+            # Cálculo do "triângulo" do drone node
+            truck_triang = (length(nodes[tsp_tour[k - 1]], nodes[tsp_tour[(k + 1) % len(tsp_tour)]])/speed_truck) \
+                - (length(nodes[tsp_tour[k - 1]], nodes[tsp_tour[k]])/speed_truck 
+                   + length(nodes[tsp_tour[k]], nodes[tsp_tour[(k + 1) % len(tsp_tour)]])/speed_truck
+                )
+
+            # distância percorrida pelo caminhão seguindo a rota de k até j
+            dist_truck_kj = 0 
+
+            for j in range(k + 1, n + 1):
+                # Cálculo da volta do drone
+                dist_drone_kj = length(nodes[tsp_tour[k]],
+                        nodes[tsp_tour[j % n]])/speed_drone
+                # Cálculo caminho caminhão até j
+                dist_truck_kj += length(nodes[tsp_tour[j - 1]], nodes[tsp_tour[j % n]])/speed_truck
+
+                # Cálculo da rota do caminhão sem o "triângulo" do drone node
+                dist_truck = dist_truck_ik + dist_truck_kj + truck_triang 
+                # distância percorrida pelo drone, para realizar a entrega
+                dist_drone = dist_drone_ik + dist_drone_kj
+
+                candidate_cost = max(dist_truck, dist_drone)
+                previous_cost = arcs[i, j]
+
+                if candidate_cost < previous_cost:
+                    arcs[i, j] = candidate_cost
+                    if j == n:
+                        drone_deliveries[(tsp_tour[i], n)] = k
+                    else:
+                        drone_deliveries[(tsp_tour[i], tsp_tour[j])] = k
+                
+                if dist_truck >= dist_drone:
+                    break
+     
+    # print(arcs)
+    # print("drone_deliveries = ", drone_deliveries)
+
+    # Encontrar o caminho mais curto dentre os arcos adicionados no grafo auxiliar
+    pred_shortest_path = np.full(n + 1, -1)
+    cost_shortest_path = np.full(n + 1, np.inf)
+    pred_shortest_path[0] = 0
+    cost_shortest_path[0] = 0
+    tsp_tour.append(n)
+
+    # Buscando apenas arcos de chegada, utilizar a matriz de adjacencia para melhorar o desempenho dessa parte
+    for j in range(1, n + 1):
+        for i in range(0, j):
+            cost = arcs[tsp_tour[i], tsp_tour[j]]
+            if cost_shortest_path[tsp_tour[j]] > (cost_shortest_path[tsp_tour[i]] + cost):
+                cost_shortest_path[tsp_tour[j]] = cost_shortest_path[tsp_tour[i]] + cost
+                pred_shortest_path[tsp_tour[j]] = tsp_tour[i]
+
+    tsp_tour.pop()
+    # print("shortest_path = ", shortest_path)
+    # print("cost_shortest_path = ", cost_shortest_path)
+    return drone_deliveries, pred_shortest_path, cost_shortest_path
 
 def make_aux_graph(tsp_tour, speed_truck, speed_drone, nodes):
+
     # armazena as arestas do circuito do tsp
     arcs = np.full((len(tsp_tour) + 1, len(tsp_tour) + 1), np.inf)
 
@@ -125,7 +238,11 @@ def make_aux_graph(tsp_tour, speed_truck, speed_drone, nodes):
 
 def make_tspd_sol(tsp_tour, speed_truck, speed_drone, nodes):
     # Transforma as informacoes do grafo auxiliar em uma solucao tspd
-    drone_deliveries, path_pred, cost_shortest_path = make_aux_graph(
+
+    # drone_deliveries, path_pred, cost_shortest_path = make_aux_graph(
+    #     tsp_tour, speed_truck, speed_drone, nodes)
+
+    drone_deliveries, path_pred, cost_shortest_path = make_aux_graph_simple_lazy(
         tsp_tour, speed_truck, speed_drone, nodes)
 
     # Constroi o caminho armazenado em shortest_path

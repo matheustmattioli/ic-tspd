@@ -113,7 +113,7 @@ def grasp_tspd(node_count, nodes, speed_truck, speed_drone, tsp_choice):
         solution_tspd, operations = make_tspd_sol(
             solution_tsp, speed_truck, speed_drone, nodes)
 
-        # print(time.time() - start)
+        print(" " + str(time.time() - start))
 
         # Separar as operacoes contidas em solution_tspd
         truck_nodes = solution_tspd[0]
