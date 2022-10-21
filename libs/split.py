@@ -135,9 +135,9 @@ def make_aux_graph_simple_lazy(tsp_tour, speed_truck, speed_drone, nodes):
                 if candidate_cost < previous_cost:
                     arcs[i, j] = candidate_cost
                     if j == n:
-                        drone_deliveries[(tsp_tour[i], n)] = k
+                        drone_deliveries[(tsp_tour[i], n)] = tsp_tour[k]
                     else:
-                        drone_deliveries[(tsp_tour[i], tsp_tour[j])] = k
+                        drone_deliveries[(tsp_tour[i], tsp_tour[j])] = tsp_tour[k]
                 
                 if dist_truck >= dist_drone:
                     break
