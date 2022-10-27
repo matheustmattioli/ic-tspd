@@ -12,6 +12,9 @@ def greedypath_RCL(circuit, customers, ALPHA):
     len_circuit = len(circuit)
     obj_BS = float('inf')
     
+    # Constant choices for tests
+    random.seed(4542355562136458828)
+
     # Change range value to test circuit  starting in dif nodes
     for v in range(1):
         dict_positions = {circuit[i] : circuit[i] for i in range(len_circuit)}
