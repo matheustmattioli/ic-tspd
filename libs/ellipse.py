@@ -19,8 +19,8 @@ def ellipse(array_nodes, customers, ALPHA, drone_speed, truck_speed):
     insert_position += 1
 
     # Fixar uma seed para testes
-    random.seed(4542355562136458828)
-
+    # random.seed(4542355562136458828)
+    
     while insert_position < size_circuit:
         # Os membros da RCL são escolhidos de acordo com um valor
         # relacionado com a distância máxima percorrida pelo drone  

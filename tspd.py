@@ -2,8 +2,8 @@ import sys      # Necessário para ler info do terminal
 import os       # Para ler todas as instâncias de uma pasta
 import math     # Para cálculo de distâncias no plano euclidiano
 import time     # Para verificar quanto tempo nossa solução consome
-from libs.GRASP import grasp_2opt, grasp_tspd # Metaheurística GRASP para resolver TSP
-from libs.GRASP import grasp_vnd # Metaheurística GRASP-VND para resolver TSP
+from libs.GRASP import nearest, grasp_tspd # Metaheurística GRASP para resolver TSP
+from libs.GRASP import nearest_vnd # Metaheurística GRASP-VND para resolver TSP
 from libs.greedyRCL import greedypath_RCL # Heurística gulosa-aleatorizada para TSP
 from libs.spikes import spikes_tsp # Heurística gulosa-aleatorizada geradora de bicos para TSP
 from libs.split import make_tspd_sol # Realiza entrega por drones, solução para TSPD
@@ -84,7 +84,7 @@ def read_data(input_data):
                 f"index do cliente = {node.index}, ({node.x}, {node.y})")
         print()
 
-    return solve_tspd(node_count, nodes, speed_truck, speed_drone, 1)
+    return solve_tspd(node_count, nodes, speed_truck, speed_drone, 3)
 
 
 def solve_tspd(node_count, nodes, speed_truck, speed_drone, tsp_choice):

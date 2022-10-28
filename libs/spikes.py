@@ -11,8 +11,8 @@ def spikes_tsp(array_nodes, customers, speed_drone, ALPHA):
     size_circuit = len(array_nodes)
     best_obj = np.inf
 
-        # Fixar uma seed para testes
-    random.seed(4542355562136458828)
+    # Fixar uma seed para testes
+    # random.seed(4542355562136458828)
 
 
     # Com range(1) a rota começa apenas no vértice 0, 

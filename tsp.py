@@ -2,8 +2,8 @@ import sys      # Necessário para ler info do terminal
 import os       # Para ler todas as instâncias de uma pasta
 import math     # Para cálculo de distâncias no plano euclidiano
 import time     # Para verificar quanto tempo nossa solução consome
-from libs.GRASP import grasp_2opt # Metaheurística GRASP para resolver TSP
-from libs.GRASP import grasp_vnd # Metaheurística GRASP-VND para resolver TSP
+from libs.GRASP import nearest # Metaheurística GRASP para resolver TSP
+from libs.GRASP import nearest_vnd # Metaheurística GRASP-VND para resolver TSP
 from libs.greedyRCL import greedypath_RCL # Heurística gulosa-aleatorizada para TSP
 from libs.spikes import spikes_tsp # Heurística gulosa-aleatorizada geradora de bicos para TSP
 from libs.utilities import calc_obj # Calcular função objetivo do TSPD
@@ -105,11 +105,11 @@ def solve_tsp(node_count, nodes, tsp_choice):
 
     # Teste com GRASP
     if tsp_choice == 3:
-        solution_tsp = grasp_2opt(node_indexes, nodes)
+        solution_tsp = nearest(node_indexes, nodes)
     
     # Teste com GRASP-VND
     if tsp_choice == 4:
-        solution_tsp = grasp_vnd(node_indexes, nodes)
+        solution_tsp = nearest_vnd(node_indexes, nodes)
 
     # Tratamento para retornar o depósito para início do circuito.
     for depot_index in range(len(solution_tsp)):

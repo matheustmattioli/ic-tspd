@@ -13,7 +13,7 @@ def greedypath_RCL(circuit, customers, ALPHA):
     obj_BS = float('inf')
     
     # Constant choices for tests
-    random.seed(4542355562136458828)
+    # random.seed(4542355562136458828)
 
     # Change range value to test circuit  starting in dif nodes
     for v in range(1):
