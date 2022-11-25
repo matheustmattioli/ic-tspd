@@ -1,6 +1,6 @@
 import time
 import libs.greedyRCL as greedyRCL
-import libs.localSearch as localSearch
+import libs.utilities as utils
 import numpy as np
 import random
 from adapter.adapt_tspd_author import calc_obj
@@ -8,21 +8,13 @@ from libs.ellipse import ellipse
 from libs.spikes import spikes_tsp
 from libs.split import make_tspd_sol
 
-ALPHA_MAX = 0.5
-N_ITE_GRASP = 100 # Number of iterations GRASP.
-MAX_ITER_W_NO_IMPROV = 100
+ALPHA_MAX = 0.2
+N_ITE_GRASP = 10 # Number of iterations GRASP.
+MAX_ITER_W_NO_IMPROV = 10
 epsilon = 0.001
 # Seed para testes
 random.seed(4542355562136458828)
 
-def nearest_vnd(cluster_vehicle, customers):
-    # Greedy Randomized Adaptative Search Procedure (GRASP) implementation with 
-    # Local Search 2-OPT and 3-OPT as "Search Procedure". 
-    ALPHA = 0
-    solution_vehicle, solution_obj = greedyRCL.greedypath_RCL(cluster_vehicle, customers, ALPHA)
-    solution_vehicle, solution_obj = localSearch.localSearchVNS(solution_vehicle, customers)
-
-    return solution_vehicle
 
 def nearest(cluster_vehicle, customers, alpha):
     solution_vehicle, _ = greedyRCL.greedypath_RCL(cluster_vehicle, customers, alpha)
@@ -48,6 +40,7 @@ def grasp_tspd(node_count, nodes, speed_truck, speed_drone, tsp_choice):
     # GRASP para TSPD
     while alpha_grasp <= ALPHA_MAX + epsilon and n_iter_w_no_improv < MAX_ITER_W_NO_IMPROV:
         
+        # print("\nalpha_grasp = ", alpha_grasp)
         # Teste com algoritmo da estratégia de elipse
         if tsp_choice == 1:
             solution_tsp = ellipse(node_indexes, nodes, alpha_grasp, speed_drone, speed_truck)
@@ -59,6 +52,8 @@ def grasp_tspd(node_count, nodes, speed_truck, speed_drone, tsp_choice):
         # Teste com Nearest
         if tsp_choice == 3:
             solution_tsp = nearest(node_indexes, nodes, alpha_grasp)
+
+        # print("current tsp solution = ", utils.calc_obj(solution_tsp, nodes))
 
         # Tratamento para retornar o depósito para início do circuito.
         for depot_index in range(len(solution_tsp)):
@@ -82,7 +77,8 @@ def grasp_tspd(node_count, nodes, speed_truck, speed_drone, tsp_choice):
 
         # Calcula custo do TSP-D
         cost_obj = calc_obj(operations, speed_truck, speed_drone, nodes)
-        # print(cost_obj)
+        
+        # print("current tspd solution = " + str(cost_obj))
 
         n_iter_w_no_improv += 1
         if cost_obj < best_cost_obj:

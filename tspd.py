@@ -3,7 +3,7 @@ import os       # Para ler todas as instâncias de uma pasta
 import math     # Para cálculo de distâncias no plano euclidiano
 import time     # Para verificar quanto tempo nossa solução consome
 from libs.GRASP import nearest, grasp_tspd # Metaheurística GRASP para resolver TSP
-from libs.GRASP import nearest_vnd # Metaheurística GRASP-VND para resolver TSP
+from libs.nearest_vnd import solve_tspd_nearest_vnd # Metaheurística NEAREST-VND para resolver TSP
 from libs.greedyRCL import greedypath_RCL # Heurística gulosa-aleatorizada para TSP
 from libs.spikes import spikes_tsp # Heurística gulosa-aleatorizada geradora de bicos para TSP
 from libs.split import make_tspd_sol # Realiza entrega por drones, solução para TSPD
@@ -84,7 +84,7 @@ def read_data(input_data):
                 f"index do cliente = {node.index}, ({node.x}, {node.y})")
         print()
 
-    return solve_tspd(node_count, nodes, speed_truck, speed_drone, 3)
+    return solve_tspd(node_count, nodes, speed_truck, speed_drone, 1)
 
 
 def solve_tspd(node_count, nodes, speed_truck, speed_drone, tsp_choice):
@@ -92,7 +92,11 @@ def solve_tspd(node_count, nodes, speed_truck, speed_drone, tsp_choice):
     # Nessa função vamos resolver o problema do TSP-D,
     start_time = time.time()
 
+    # Solucao com GRASP
     cost_obj, truck_nodes, drone_nodes = grasp_tspd(node_count, nodes, speed_truck, speed_drone, tsp_choice)
+
+    # Solucao nearest_vnd 
+    # cost_obj, truck_nodes, drone_nodes = solve_tspd_nearest_vnd(nodes, speed_truck, speed_drone)
 
     # Tempo de execução da instância
     end_time = time.time()
@@ -124,7 +128,8 @@ if __name__ == '__main__':
         if path.endswith(".txt"):
             count += 1
             file_location.append(f"{path}".strip())
-        else:
+        else: 
+            # Fazer script com isso de baixo, pasta das instancias, pasta pra gerar os pontos sols e metodos escolhidos
             for file in os.listdir(path):
                 if file.endswith(".txt"):
                     count += 1
